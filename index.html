@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Manipulator Control</title>
+    <style>
+      body {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://threejs.org/build/three.js"></script>
+    <script>
+      // Создаем сцену, камеру и рендерер
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Создаем геометрию и материал для манипулятора (замените этот код на загрузку своей модели)
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const material = new THREE.MeshBasicMaterial({ color: 0xd7d7d7 });
+      const manipulator = new THREE.Mesh(geometry, material);
+      scene.add(manipulator);
+
+      // Устанавливаем начальную позицию манипулятора
+      manipulator.position.set(0, 0, -5);
+
+      // Создаем стрелки для перемещения
+      const arrowGeometry = new THREE.CylinderGeometry(0, 0.1, 0.4, 12);
+      const arrowMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+
+      const forwardArrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
+      forwardArrow.position.set(0, 0, -0.5);
+      scene.add(forwardArrow);
+
+      const leftArrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
+      leftArrow.rotation.z = Math.PI / 2;
+      leftArrow.position.set(-0.5, 0, -1);
+      scene.add(leftArrow);
+
+      const rightArrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
+      rightArrow.rotation.z = -Math.PI / 2;
+      rightArrow.position.set(0.5, 0, -1);
+      scene.add(rightArrow);
+
+      // Обработка пользовательского ввода
+      document.addEventListener('keydown', (event) => {
+        const speed = 0.1; // Скорость движения манипулятора
+
+        switch (event.key) {
+          case 'ArrowUp':
+            manipulator.position.z += speed;
+            break;
+          case 'ArrowDown':
+            manipulator.position.z -= speed;
+            break;
+          case 'ArrowLeft':
+            manipulator.position.x -= speed;
+            break;
+          case 'ArrowRight':
+            manipulator.position.x += speed;
+            break;
+        }
+      });
+
+      // Установка позиции камеры
+      camera.position.z = 5;
+
+      // Создание функции анимации
+      const animate = () => {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+      };
+
+      animate();
+    </script>
+  </body>
+</html>
