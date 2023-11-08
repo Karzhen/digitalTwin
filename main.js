@@ -76,35 +76,71 @@ function main() {
 	{
 		const objLoaderCYLINDER = new OBJLoader();
 		const objLoaderSTEM = new OBJLoader();
-		// objLoader.load( 'https://threejs.org/manual/examples/resources/models/windmill/windmill.obj', ( root ) => {
-		objLoaderCYLINDER.load( 'models/Cylinder.obj', ( root ) => {
-			root.position.set(-3, 0, -5);
-			const desiredSize = 0.05; // Replace with your desired size
-			root.scale.set(desiredSize, desiredSize, desiredSize);
-			cylinderObject = root;
-			objectsGroup.add( root );
+		const objLoaderSHOULDER = new OBJLoader();
+		const objLoaderFOREARM1 = new OBJLoader();
+		const objLoaderFOREARM2 = new OBJLoader();
+		const objLoaderFOREARM3 = new OBJLoader();
+		const objLoaderFINGER = new OBJLoader();
 
-		} );
-		objLoaderSTEM.load( 'models/Stem.obj', ( root ) => {
-			root.position.set(-3, positionYSTEM, -5);
-			const desiredSize = 0.05; // Replace with your desired size
+		function modelPlacement(root, modelName) {
+			const desiredSize = 0.05;
 			root.scale.set(desiredSize, desiredSize, desiredSize);
-			stemObject = root;
-			
 
 			objectsGroup.add( root );
-			const boundingBox = new THREE.Box3().setFromObject(stemObject);
+			const boundingBox = new THREE.Box3().setFromObject(root);
 
 			// Get the dimensions
 			const objectDimensions = new THREE.Vector3();
 			boundingBox.getSize(objectDimensions);
 			
-			console.log('Length:', objectDimensions.x);
-			console.log('Width:', objectDimensions.y);
-			console.log('Height:', objectDimensions.z);
+			console.log(`Length of ${modelName}:`, objectDimensions.x);
+			console.log(`Width of ${modelName}:`, objectDimensions.y);
+			console.log(`Height of ${modelName}:`, objectDimensions.z);
+		}
 
+
+		// objLoader.load( 'https://threejs.org/manual/examples/resources/models/windmill/windmill.obj', ( root ) => {
+		objLoaderCYLINDER.load( 'models/Cylinder.obj', ( root ) => {
+			root.position.set(-3, 0, -5);
+			modelPlacement(root, 'cylinder');
+			scene.add( root );
 		} );
-		scene.add( objectsGroup );
+
+		objLoaderSTEM.load( 'models/Stem.obj', ( root ) => {
+			root.position.set(-3, positionYSTEM, -5);
+			modelPlacement(root, 'stem');
+			scene.add( root );
+		} );
+
+		objLoaderSHOULDER.load( 'models/Shoulder.obj', ( root ) => {
+			root.position.set(-20, 0, -20);
+			modelPlacement(root, 'shoulder');
+			scene.add( root );
+		} );
+
+		objLoaderFOREARM1.load( 'models/Forearm1.obj', ( root ) => {
+			root.position.set(-20, 0, 20);
+			modelPlacement(root, 'forearm 1');
+			scene.add( root );
+		} );
+
+		objLoaderFOREARM2.load( 'models/Forearm2.obj', ( root ) => {
+			root.position.set(20, 0, -20);
+			modelPlacement(root, 'forearm 2');
+			scene.add( root );
+		} );
+
+		objLoaderFOREARM3.load( 'models/Forearm3.obj', ( root ) => {
+			root.position.set(20, 0, 0);
+			modelPlacement(root, 'forearm 3');
+			scene.add( root );
+		} );
+
+		objLoaderFINGER.load( 'models/Finger.obj', ( root ) => {
+			root.position.set(20, 0, 20);
+			modelPlacement(root, 'finger');
+			scene.add( root );
+		} );
 
 	}
 
