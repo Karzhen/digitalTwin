@@ -4,7 +4,15 @@
 </head>
 <body>
   <main>
-    <canvas id="c" class="canvas"></canvas>
+    <canvas id="canvas" class="canvas"></canvas>
+    <nav>
+      <a href="/">Sphere</a>
+      <ul>
+        <li>Explore</li>
+        <li>Create</li>
+      </ul>
+      <h1 class="title">Give it a spin</h1>
+    </nav>
     <input id="range_stemY" type="range" value="0" min="-4.5" max="5" step="0.1">
     <input id="range_stemROTATE" type="range" value="0" min="0" max="6.28" step="0.01">
   </main>
@@ -20,7 +28,8 @@
       "three/addons/": "https://threejs.org/examples/jsm/"
     }
   }</script>
-  <script type="module" src="main.js"></script>
+  <!-- <script type="module" src="main.js"></script> -->
+  <script type="module" src="./script.js"></script>
   <script type="module" src="ui/range/range_stemY.js"></script>
   <script type="module" src="ui/range/range_stemROTATE.js"></script>
 </body>
