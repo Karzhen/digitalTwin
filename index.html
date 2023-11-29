@@ -1,27 +1,16 @@
 <!DOCTYPE html>
+<html lang="ru">
 <head>
-  <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PREVIEW</title>
 </head>
 <body>
-  <main>
-    <canvas id="c" class="canvas"></canvas>
-    <input id="range_stemY" type="range" value="0" min="-4.5" max="5" step="0.1">
-    <input id="range_stemROTATE" type="range" value="0" min="0" max="6.28" step="0.01">
-  </main>
-  <script>
-  let positionYSTEM = 0;
-  let stemObject;
-  let cylinderObject;
-  let objectsGroup;
-  </script>
-    <script  type="importmap">{
-    "imports": {
-      "three": "https://threejs.org/build/three.module.js",
-      "three/addons/": "https://threejs.org/examples/jsm/"
-    }
-  }</script>
-  <script type="module" src="main.js"></script>
-  <script type="module" src="ui/range/range_stemY.js"></script>
-  <script type="module" src="ui/range/range_stemROTATE.js"></script>
+    <canvas class="webgl"></canvas>
+    <nav>
+      <input id="range" type="range" min="0" max="6.28" step="0.01" value="0">
+      <!-- here will be navigate or other controls -->
+    </nav>
+    <script type="module" src ="/main.js"></script> <!-- main script -->
 </body>
 </html>

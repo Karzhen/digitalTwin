@@ -1,12 +1,24 @@
-html, body {
+* {
     margin: 0;
     padding: 0;
-    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    user-select: none;
 }
 
-#c {
-    margin: 2vh auto;
-    width: 90vw;
-    height: 90vh;
-    display: block;
+body,
+html {
+    overflow-x: hidden;
+}
+
+nav {
+    position: absolute;
+    z-index: 10;
+}
+
+.webgl {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
 }
