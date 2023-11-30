@@ -17,7 +17,6 @@ const material = {
     color: '#fa0000',
     roughness: 0.2,
     metalness: 0.3,
-	wireframe: true
 };
 
 const floorConfig = {
@@ -31,6 +30,10 @@ const floorConfig = {
 };
 // world.CreateSphere(boxConfig, material);
 world.CreateBox(floorConfig, material);
+world.CreateSphere(boxConfig, material);
+world.CreateCone(boxConfig, material);
+world.CreateRing(boxConfig, material);
+world.CreateCylinder(boxConfig, material);
 world.CreateSphere(boxConfig, material);
 const config = {
     type: 'box',

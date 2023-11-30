@@ -24,7 +24,7 @@ class WORLD {
             info: false, // calculate statistic or not
         }); 
         // Lights
-        this.light = new THREE.HemisphereLight(0xffffff);
+        this.light = new THREE.DirectionalLight(0xffffff);
         this.light.position.set(0, 40, 30);
         this.scene.add(this.light);
         // Camera
@@ -40,6 +40,8 @@ class WORLD {
         this.canvas = document.querySelector(`.${htlmCLASS}`);
         this.renderer = new THREE.WebGLRenderer({canvas: this.canvas});
         this.renderer.setSize(this.sizes.width, this.sizes.height);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.setPixelRatio(2);
         this.renderer.render(this.scene, this.camera);
         // Controls
@@ -136,6 +138,7 @@ class WORLD {
         const geometry = new THREE.BoxGeometry(configGEOMETRY.size[0], configGEOMETRY.size[1], configGEOMETRY.size[2]);
         const material = new THREE.MeshStandardMaterial(configMATERIAL);
         const box = new THREE.Mesh(geometry, material);
+        box.castShadow = true;
         this.scene.add(box);
         // phy
         const boxPHY = this.world.add(configGEOMETRY);
@@ -159,6 +162,7 @@ class WORLD {
         }
         const material = new THREE.MeshStandardMaterial(configMATERIAL);
         const sphere = new THREE.Mesh(geometry, material);
+        sphere.castShadow = true;
         this.scene.add(sphere);
         // phy
         const spherePHY = this.world.add(configGEOMETRY);
@@ -174,13 +178,14 @@ class WORLD {
         const material = new THREE.MeshStandardMaterial(configMATERIAL);
         const cylinder = new THREE.Mesh(geometry, material);
         this.scene.add(cylinder);
+        cylinder.castShadow = true;
         // phy
         const cylinderPHY = this.world.add(configGEOMETRY);
         if (configGEOMETRY.name) {
             cylinderPHY.name = configGEOMETRY.name;
         }
         this.Bind(configGEOMETRY.type, cylinderPHY, cylinder);
-        if (config.onload) {
+        if (configGEOMETRY.onload) {
             config.onload(cylinder, cylinderPHY);
         }
     }
@@ -191,13 +196,14 @@ class WORLD {
         const material = new THREE.MeshStandardMaterial(configMATERIAL);
         const cone = new THREE.Mesh(geometry, material);
         this.scene.add(cone);
+        cone.castShadow = true;
         // phy
         const conePHY = this.world.add(configGEOMETRY);
         if (configGEOMETRY.name) {
             conePHY.name = configGEOMETRY.name;
         }
         this.Bind(configGEOMETRY.type, conePHY, cone);
-        if (config.onload) {
+        if (configGEOMETRY.onload) {
             config.onload(cone, conePHY);
         }
     }
@@ -207,14 +213,15 @@ class WORLD {
         const geometry = new THREE.RingGeometry(configGEOMETRY.size[0]);
         const material = new THREE.MeshStandardMaterial(configMATERIAL);
         const ring = new THREE.Mesh(geometry, material);
-        this.scene.add(sphere);
+        this.scene.add(ring);
+        ring.castShadow = true;
         // phy
         const ringPHY = this.world.add(configGEOMETRY);
         if (configGEOMETRY.name) {
             ringPHY.name = configGEOMETRY.name;
         }
         this.Bind(configGEOMETRY.type, ringPHY, ring);
-        if (config.onload) {
+        if (configGEOMETRY.onload) {
             config.onload(ring, ringPHY);
         }
     }
@@ -310,6 +317,12 @@ class WORLD {
         this.scene.background = new THREE.Color(colour);
     }
 
+    SetBackgroundCubeTexture(array) {
+        const loader = new THREE.CubeTextureLoader();
+        const texture = loader.load([array]);
+        this.scene.background = texture;
+    }
+
     GetObjects() {
         return this.figures;
     }
@@ -322,9 +335,7 @@ class WORLD {
         return this.world.checkContact(obj1, obj2);
     }
 
-    CheckSelftContact(obj1) {
-        return this.world.checkContact(obj1);
-    }
+
 }
 
 export { WORLD };
