@@ -55,7 +55,7 @@ class WORLD {
             this.renderer.setSize(this.sizes.width, this.sizes.height);
         })
         // массив объектов
-        this.figures = [];
+        this.figures = []; // { type, physicsOBJ, graphicOBJ }
         this.lastLoadedGLTF;
     }
 
@@ -80,10 +80,30 @@ class WORLD {
         this.Render();
     }
 
+    /* camera
+    config = {
+        fov: 50,
+        aspect: this.sizes.width / this.sizes.height,
+        near: 0.1,
+        far: 1000,
+    }
+    */
+    SetCameraSettings(config) {
+        camera = new THREE.PerspectiveCamera(
+            config.fov, 
+            config.aspect, 
+            config.near, 
+            config.far
+        );
+        this.camera = camera;
+    }
+
     UpdateFigures() {
         for (let i = 0; i < this.figures.length; i++) {
             const figure = this.figures[i];
             if (figure.type === 'gltf') {
+                this.UpdatePosition(figure.physicsOBJ, figure.graphicOBJ.scene);
+                this.UpdateQuaternion(figure.physicsOBJ, figure.graphicOBJ.scene);
                 continue;
             }
             this.UpdatePosition(figure.physicsOBJ, figure.graphicOBJ);
@@ -104,6 +124,13 @@ class WORLD {
         this.figures.push({ type: type, physicsOBJ: physicsOBJ, graphicOBJ: graphicOBJ });
     }
 
+    BindFunction(domOBJECT,physicsOBJ, func, typeEvent = 'click') {
+        console.log('bind');
+        domOBJECT.addEventListener(typeEvent, (event) => {
+            func(physicsOBJ);    
+        })
+    }
+
     CreateBox(configGEOMETRY, configMATERIAL) {
         configGEOMETRY.type = 'box';
         const geometry = new THREE.BoxGeometry(configGEOMETRY.size[0], configGEOMETRY.size[1], configGEOMETRY.size[2]);
@@ -112,6 +139,9 @@ class WORLD {
         this.scene.add(box);
         // phy
         const boxPHY = this.world.add(configGEOMETRY);
+        if (configGEOMETRY.name) {
+            boxPHY.name = configGEOMETRY.name;
+        }
         this.Bind(configGEOMETRY.type, boxPHY, box);
     }
 
@@ -123,7 +153,6 @@ class WORLD {
             geometry = new THREE.SphereGeometry(configSPHERE.radius, configSPHERE.widthSegments, configSPHERE.heightSegments,
                 configSPHERE.phiStart, configSPHERE.phiLenght, configSPHERE.thetaStart, configSPHERE.thetaLenght);
             configGEOMETRY.size = [configSPHERE.radius];
-            
         } 
         else {
             geometry = new THREE.SphereGeometry(configGEOMETRY.size[0]);
@@ -133,6 +162,9 @@ class WORLD {
         this.scene.add(sphere);
         // phy
         const spherePHY = this.world.add(configGEOMETRY);
+        if (configGEOMETRY.name) {
+            spherePHY.name = configGEOMETRY.name;
+        }
         this.Bind(configGEOMETRY.type, spherePHY, sphere);
     }
 
@@ -144,7 +176,13 @@ class WORLD {
         this.scene.add(cylinder);
         // phy
         const cylinderPHY = this.world.add(configGEOMETRY);
+        if (configGEOMETRY.name) {
+            cylinderPHY.name = configGEOMETRY.name;
+        }
         this.Bind(configGEOMETRY.type, cylinderPHY, cylinder);
+        if (config.onload) {
+            config.onload(cylinder, cylinderPHY);
+        }
     }
 
     CreateCone(configGEOMETRY, configMATERIAL) { // TODO: CUSTOM GEOMETRY!
@@ -155,43 +193,110 @@ class WORLD {
         this.scene.add(cone);
         // phy
         const conePHY = this.world.add(configGEOMETRY);
+        if (configGEOMETRY.name) {
+            conePHY.name = configGEOMETRY.name;
+        }
         this.Bind(configGEOMETRY.type, conePHY, cone);
+        if (config.onload) {
+            config.onload(cone, conePHY);
+        }
     }
 
     CreateRing(configGEOMETRY, configMATERIAL) { // TODO: CUSTOM GEOMETRY!
         configGEOMETRY.type = 'box';
         const geometry = new THREE.RingGeometry(configGEOMETRY.size[0]);
         const material = new THREE.MeshStandardMaterial(configMATERIAL);
-        const sphere = new THREE.Mesh(geometry, material);
+        const ring = new THREE.Mesh(geometry, material);
         this.scene.add(sphere);
         // phy
-        const spherePHY = this.world.add(configGEOMETRY);
-        this.Bind(configGEOMETRY.type, spherePHY, sphere);
+        const ringPHY = this.world.add(configGEOMETRY);
+        if (configGEOMETRY.name) {
+            ringPHY.name = configGEOMETRY.name;
+        }
+        this.Bind(configGEOMETRY.type, ringPHY, ring);
+        if (config.onload) {
+            config.onload(ring, ringPHY);
+        }
     }
 
-    LoadGLTF(dirpath, namefile, scale = [0.1, 0.1, 0.1], position = [0, 0, 0]) {
-        const loader = new GLTFLoader().setPath(dirpath);
-        loader.load(namefile, (gltf) => {
-            console.log('gltf loaded!');
+    /* Расширенный конфиг который принимает LoadGLTF 
+    config = {
+        type: 'box', // cylinder, box, sphere
+        size: [1, 1, 1], // radius, height, depth (for spheres, only radius is used)
+        pos: [0, 0, 0], // initial position
+        move: false, // allow movement
+        density: 0.1, // density of the object
+        friction: 0.2, // friction
+        restitution: 0.6, // bounciness
+        createcopy: false,
+        scale: [0.1, 0.1, 0.1],
+        dirpath: '/',
+        namefile: 'scene.gltf',
+        name: 'scene',
+        wireframe: false,
+        onload: (gltf) => { console.log('gltf loaded'); }
+    }
+    */
+    LoadGLTF(config) { 
+        const loader = new GLTFLoader().setPath(config.dirpath);
+        loader.load(config.namefile, (gltf) => {
             gltf.scene.traverse(child => {
                 child.castShadow = true;
+                console.log(child.name, child.position)
+                if (child.isMesh) {
+                    child.material.wireframe = config.wireframe;
+                }
             });
-            gltf.scene.scale.set(scale[0], scale[1], scale[2]);
-            gltf.scene.position.set(position[0], position[1], position[2]);
-            // Traverse through the scene to set properties and get bounding box
+
+            gltf.scene.scale.set(config.scale[0], config.scale[1], config.scale[2]);
+            gltf.scene.position.set(config.pos[0], config.pos[1], config.pos[2]);
             const boundingBox = new THREE.Box3().setFromObject(gltf.scene);
-            // Get the size of the bounding box
             const size = new THREE.Vector3();
             boundingBox.getSize(size);
             this.scene.add(gltf.scene);
-            const boxPHY = this.world.add({ type: 'box', size: [size.x, size.y, size.z], pos:[position[0], position[1], position[2]], move: false });
-            this.CreateBox({ type: 'box', size: [size.x, size.y, size.z], pos:[position[0], position[1], position[2]], move: false }, {
-                color: '#fa0000',
-                wireframe: true
+            const configPHY = { 
+                type: config.type, 
+                size: [size.x, size.y, size.z], 
+                pos: config.pos, 
+                move: config.move,
+                density: config.density, // density of the object
+                friction: config.friction, // friction
+                restitution: config.restitution, // bounciness
+            };
+            const boxPHY = this.world.add(configPHY);
+            if (config.name) {
+                boxPHY.name = config.name;
             }
-            );
+            if (config.createcopy) {
+                switch (config.type) {
+                    case 'box':
+                        this.CreateBox(configPHY, {
+                            color: '#fa0000',
+                            wireframe: true
+                        });
+                        break;
+                    case 'sphere':
+                        this.CreateSphere(configPHY, {
+                            color: '#fa0000',
+                            wireframe: true
+                        });
+                        break;
+                    case 'cylinder':
+                        console.log(configPHY.size);
+                        configPHY.size = [size.x, size.x, size.y];
+                        this.CreateCylinder(configPHY, {
+                            color: '#fa0000',
+                            wireframe: true
+                        });
+                        break;
+                }
+            }
             this.Bind('gltf', boxPHY, gltf);
             this.lastLoadedGLTF = gltf;
+            if (config.onload) {
+                config.onload(gltf, boxPHY);
+            }
+            return boxPHY;
         });
     }
 
@@ -201,8 +306,24 @@ class WORLD {
         this.scene.background = texture;
     }
 
+    SetBackgroundColour(colour) {
+        this.scene.background = new THREE.Color(colour);
+    }
+
     GetObjects() {
         return this.figures;
+    }
+
+    GetContacts() {
+        return this.world.contacts;
+    }
+
+    CheckContact(obj1, obj2) {
+        return this.world.checkContact(obj1, obj2);
+    }
+
+    CheckSelftContact(obj1) {
+        return this.world.checkContact(obj1);
     }
 }
 
