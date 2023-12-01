@@ -8,7 +8,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'; // gtlf l
 */
 
 class WORLD {
-    constructor(htlmCLASS) {
+    constructor(domELEMENT) {
         this.sizes = {
             width: window.innerWidth,
             height: window.innerHeight,
@@ -37,7 +37,7 @@ class WORLD {
         this.camera.position.z = -20;
         this.scene.add(this.camera);
         // Render
-        this.canvas = document.querySelector(`.${htlmCLASS}`);
+        this.canvas = document.querySelector(`${domELEMENT}`);
         this.renderer = new THREE.WebGLRenderer({canvas: this.canvas});
         this.renderer.setSize(this.sizes.width, this.sizes.height);
         this.renderer.shadowMap.enabled = true;
@@ -120,6 +120,7 @@ class WORLD {
 
     UpdateQuaternion(physicsOBJ, graphicOBJ) {
         const quaternion = physicsOBJ.getQuaternion();
+        graphicOBJ.quaternion.set(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
     }
 
     Bind(type, physicsOBJ, graphicOBJ) {
@@ -335,6 +336,22 @@ class WORLD {
         return this.world.checkContact(obj1, obj2);
     }
 
+    Rotate(obj, speed) {
+        // Создаем новый кватернион для вращения
+        const rotationQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, speed, 0, 'XYZ'));
+
+        // Комбинируем текущий кватернион объекта с новым для вращения
+        obj.quaternion.multiply(rotationQuaternion);
+
+        // Нормализуем кватернион, чтобы избежать искажений
+        obj.quaternion.normalize();
+        return obj.quaternion;
+    }
+
+    AddAxisHelper(int) {
+        const axesHelper = new THREE.AxesHelper(int);
+        this.scene.add(axesHelper);
+    }
 
 }
 

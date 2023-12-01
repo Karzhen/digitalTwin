@@ -1,7 +1,7 @@
 import * as WORLD from "./world";
 import "./public/css/style.css";
 
-let world = new WORLD.WORLD('webgl');
+let world = new WORLD.WORLD('.webgl');
 
 const boxConfig = {
     type: 'cone',
@@ -30,18 +30,17 @@ const floorConfig = {
 };
 // world.CreateSphere(boxConfig, material);
 world.CreateBox(floorConfig, material);
-world.CreateSphere(boxConfig, material);
-world.CreateCone(boxConfig, material);
-world.CreateRing(boxConfig, material);
-world.CreateCylinder(boxConfig, material);
-world.CreateSphere(boxConfig, material);
+// world.CreateCone(boxConfig, material);
+// world.CreateRing(boxConfig, material);
+// world.CreateCylinder(boxConfig, material);
+// world.CreateSphere(boxConfig, material);
 const config = {
-    type: 'box',
+    type: 'sphere',
     size: [1, 1, 1], // radius, height, depth (for spheres, only radius is used)
     pos: [0, 0, 0], // initial position
     move: true, // allow movement
     density: 0.1, // density of the object
-    friction: 0.2, // friction
+    friction: 0.8, // friction
     restitution: 0, // bounciness
     createcopy: false,
     scale: [1, 1, 1],
@@ -53,28 +52,29 @@ const config = {
         console.log('gltf loaded'); 
         if (phy) {
             const jump = (obj) => {
-                console.log(obj.contactLink);
                 if (obj.contactLink) {
                     console.log("JUMP");
                     obj.linearVelocity.y = 10;
                 }
             } 
             const keysState = {};
-
+            let rotation;
             // Функция для обработки состояния клавиш
             const movement = (physicsOBJ) => {
                 keysState[event.code] = true;
-                console.log(keysState);
                 if (physicsOBJ) {
-                    const speed = 3;
-                    console.log(event.code);
+                    const speed = 4;
                     // Инициализация линейной скорости, если она еще не была установлена
-                    physicsOBJ.linearVelocity.x = physicsOBJ.linearVelocity.x || speed / 2;
-                    physicsOBJ.linearVelocity.z = physicsOBJ.linearVelocity.z || speed / 2;
+                    physicsOBJ.linearVelocity.x = 0;
+                    physicsOBJ.linearVelocity.z = 0;
                     if (keysState['ArrowRight'] || keysState['KeyD']) {
+                        physicsOBJ.setRotation({x:physicsOBJ.orientation.x, y:physicsOBJ.orientation.y , z:physicsOBJ.orientation.z});
+                        physicsOBJ.controlRot = false;
                         physicsOBJ.linearVelocity.x = -speed;
                     }
                     if (keysState['ArrowLeft'] || keysState['KeyA']) {
+                        physicsOBJ.setRotation({x:physicsOBJ.orientation.x, y:physicsOBJ.orientation.y , z:physicsOBJ.orientation.z});
+                        physicsOBJ.controlRot = false;
                         physicsOBJ.linearVelocity.x = speed;
                     }
                     if (keysState['ArrowDown'] || keysState['KeyS']) {
@@ -83,15 +83,27 @@ const config = {
                     if (keysState['ArrowUp'] || keysState['KeyW']) {
                         physicsOBJ.linearVelocity.z = speed;
                     }
+                    if (keysState['KeyQ']) {
+                        // const orientation = physicsOBJ.orientation;
+                        // physicsOBJ.resetQuaternion({x:orientation.x, y:orientation.y + 0.1, z:orientation.z, w:orientation.w});
+                        rotation = world.Rotate(physicsOBJ, 0.1);
+                        physicsOBJ.resetQuaternion(rotation);
+                        console.log(rotation);
+                    }
+                    if (keysState['KeyE']) {
+                        rotation = world.Rotate(physicsOBJ, -0.1);
+                        physicsOBJ.resetQuaternion(rotation);
+                        console.log(rotation);
+                    }
                     if (keysState['Space']) {
                         jump(physicsOBJ);
                     }
-
                 }
             };
             const stopmovement = (physicsOBJ) => {
                 keysState[event.code] = false;
             };
+
             // world.BindFunction(phy, jump);
             world.BindFunction(window, phy, movement, "keydown");
             world.BindFunction(window, phy, stopmovement, "keyup");
@@ -100,8 +112,7 @@ const config = {
 }
 
 world.LoadGLTF(config);
-
-
+world.AddAxisHelper(12);
 document.getElementById('range').addEventListener('input', () => {
 	if (world.loadedGLTF) {
 		world.loadedGLTF.scene.traverse(child => {
