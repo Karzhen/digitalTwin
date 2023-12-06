@@ -103,7 +103,7 @@ class WORLD {
     UpdateFigures() {
         for (let i = 0; i < this.figures.length; i++) {
             const figure = this.figures[i];
-            if (figure.type === 'gltf') {
+            if (figure.config.type === 'gltf') {
                 this.UpdatePosition(figure.physicsOBJ, figure.graphicOBJ.scene);
                 this.UpdateQuaternion(figure.physicsOBJ, figure.graphicOBJ.scene);
                 continue;
@@ -124,7 +124,7 @@ class WORLD {
     }
 
     Bind(type, physicsOBJ, graphicOBJ) {
-        this.figures.push({ type: type, physicsOBJ: physicsOBJ, graphicOBJ: graphicOBJ });
+        this.figures.push({ config: type, physicsOBJ: physicsOBJ, graphicOBJ: graphicOBJ });
     }
 
     BindFunction(domOBJECT,physicsOBJ, func, typeEvent = 'click') {
@@ -146,7 +146,10 @@ class WORLD {
         if (configGEOMETRY.name) {
             boxPHY.name = configGEOMETRY.name;
         }
-        this.Bind(configGEOMETRY.type, boxPHY, box);
+        if (configGEOMETRY.onload) {
+            configGEOMETRY.onload(box, boxPHY);
+        }
+        this.Bind(configGEOMETRY, boxPHY, box);
     }
 
     CreateSphere(configGEOMETRY, configMATERIAL, configSPHERE) {
@@ -170,7 +173,10 @@ class WORLD {
         if (configGEOMETRY.name) {
             spherePHY.name = configGEOMETRY.name;
         }
-        this.Bind(configGEOMETRY.type, spherePHY, sphere);
+        if (configGEOMETRY.onload) {
+            configGEOMETRY.onload(sphere, spherePHY);
+        }
+        this.Bind(configGEOMETRY, spherePHY, sphere);
     }
 
     CreateCylinder(configGEOMETRY, configMATERIAL) {
@@ -185,9 +191,9 @@ class WORLD {
         if (configGEOMETRY.name) {
             cylinderPHY.name = configGEOMETRY.name;
         }
-        this.Bind(configGEOMETRY.type, cylinderPHY, cylinder);
+        this.Bind(configGEOMETRY, cylinderPHY, cylinder);
         if (configGEOMETRY.onload) {
-            config.onload(cylinder, cylinderPHY);
+            configGEOMETRY.onload(cylinder, cylinderPHY);
         }
     }
 
@@ -203,9 +209,9 @@ class WORLD {
         if (configGEOMETRY.name) {
             conePHY.name = configGEOMETRY.name;
         }
-        this.Bind(configGEOMETRY.type, conePHY, cone);
+        this.Bind(configGEOMETRY, conePHY, cone);
         if (configGEOMETRY.onload) {
-            config.onload(cone, conePHY);
+            configGEOMETRY.onload(cone, conePHY);
         }
     }
 
@@ -221,9 +227,9 @@ class WORLD {
         if (configGEOMETRY.name) {
             ringPHY.name = configGEOMETRY.name;
         }
-        this.Bind(configGEOMETRY.type, ringPHY, ring);
+        this.Bind(configGEOMETRY, ringPHY, ring);
         if (configGEOMETRY.onload) {
-            config.onload(ring, ringPHY);
+            configGEOMETRY.onload(ring, ringPHY);
         }
     }
 
@@ -255,7 +261,6 @@ class WORLD {
                     child.material.wireframe = config.wireframe;
                 }
             });
-
             gltf.scene.scale.set(config.scale[0], config.scale[1], config.scale[2]);
             gltf.scene.position.set(config.pos[0], config.pos[1], config.pos[2]);
             const boundingBox = new THREE.Box3().setFromObject(gltf.scene);
@@ -299,7 +304,8 @@ class WORLD {
                         break;
                 }
             }
-            this.Bind('gltf', boxPHY, gltf);
+            config.type = 'gltf';
+            this.Bind(config, boxPHY, gltf);
             this.lastLoadedGLTF = gltf;
             if (config.onload) {
                 config.onload(gltf, boxPHY);
@@ -351,6 +357,33 @@ class WORLD {
     AddAxisHelper(int) {
         const axesHelper = new THREE.AxesHelper(int);
         this.scene.add(axesHelper);
+    }
+
+    StopAll() {
+        this.figures.forEach(figure => {
+            figure.physicsOBJ.linearVelocity.x = 0;
+            figure.physicsOBJ.linearVelocity.y = 0;
+            figure.physicsOBJ.linearVelocity.z = 0;
+            figure.physicsOBJ.resetRotation(0, 0, 0);
+        });
+    }
+
+    Stop(physicsOBJ) {
+        physicsOBJ.linearVelocity.x = 0;
+        physicsOBJ.linearVelocity.y = 0;
+        physicsOBJ.linearVelocity.z = 0;
+        physicsOBJ.resetRotation(0, 0, 0);
+    }
+
+    Restart() {
+        this.figures.forEach(figure => {
+            console.log(figure);
+            const position = figure.config.pos;
+            const size = figure.config.size;
+            figure.physicsOBJ.position.set(2 * position[0], 2 * position[1], 2 * position[2]);
+            console.log(figure.physicsOBJ.position);
+        });
+        this.StopAll();
     }
 
 }
