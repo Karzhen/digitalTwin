@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import * as OIMO from 'oimo';
 
 
 class BasicWorldDemo {
@@ -85,67 +86,93 @@ class BasicWorldDemo {
 
         this._LoadModel();
         document.addEventListener('keydown', (event) => {
+            console.log(event.key);
             if (event.key === 'ArrowUp') {
-                this._goForward();
+                this._goForward(this._shoulder);
             } else if (event.key === 'ArrowDown') {
-                this._goBack();
+                this._goBack(this._shoulder);
             } else if (event.key === 'ArrowLeft') {
-                this._goBaseLeft();
+                this._goLeft(this._bracket);
             } else if (event.key === 'ArrowRight') {
-                this._goBaseRight();
+                this._goRight(this._bracket);
+            } else if (event.key === 'q') {
+                this._goLeft(this._base);
+            } else if (event.key === 'e') {
+                this._goRight(this._base);
+            } else if (event.key === 'w') {
+                this._goForward(this._forearm);
+            } else if (event.key === 's') {
+                this._goBack(this._forearm);
+            } else if (event.key === 'r') {
+                this._goForward(this._wrist);
+            } else if (event.key === 'f') {
+                this._goBack(this._wrist);
+            } else if (event.key === 't') {
+                this._goLeft(this._rotator);
+            } else if (event.key === 'y') {
+                this._goRight(this._rotator);
             }
         });
         this._RAF();    
     }
 
     _LoadModel() {
-        const loader = new GLTFLoader().setPath('/resources/lowPolyArm/');
-        loader.load('scene.gltf', (root) => {
+        const loader = new GLTFLoader().setPath('/resources/MGM-mini/');
+        loader.load('minihand.gltf', (root) => {
             root.scene.traverse(child => {
                 child.castShadow = true;
                 console.log(child.name);
-                if (child.name === 'arm1_02') {
-                    // child.position.z += 10;
-                    // Store the loaded model in the class property
-                    this._hand = child;
-                } else if (child.name === 'base-1_01') {
-                    // Store the wheel in the class property
+                if (child.name === 'Base') {
                     this._base = child;
+                } else if (child.name === 'Bracket') {
+                    this._bracket = child;
+                } else if (child.name === 'Shoulder') {
+                    this._shoulder = child;
+                } else if (child.name === 'Forearm') {
+                    // Store the loaded model in the class property
+                    this._forearm = child;
+                } else if (child.name === 'Wrist') {
+                    // Store the wheel in the class property
+                    this._wrist = child;
+                } else if (child.name === 'Rotator') {
+                    this._rotator = child;
+                } else if (child.name === 'Fingers') {
+                    this._fingers = child;
                 }
             });
             // this._carModel = root.scene;
             console.log(root);
-            root.scene.scale.set(0.030, 0.030, 0.030);
+            root.scene.scale.set(20, 20, 20);
             root.scene.position.set(0, 0, 0);
             this._scene.add(root.scene);
         });
     }
 
-    _goForward() {
-        if (this._hand) {
+    _goForward(object) {
+        if (object) {
             // Move the hand forward
-            this._hand.rotateX(0.02);
+            object.rotateX(0.02);
         }
     }
 
-    _goBack() {
-        if (this._hand) {
-            // Move the hand forward
-            this._hand.rotateX(-0.02);
+    _goBack(object) {
+        if (object) {
+            // Move the hand back
+            object.rotateX(-0.02);
         }
     }
 
-    _goBaseLeft() {
-        if (this._base) {
+    _goLeft(object) {
+        if (object) {
             // Rotate the base
-            this._base.rotateY(.2);
+            object.rotateY(.2);
         }
     }
 
-    _goBaseRight() {
-        if (this._base) {
+    _goRight(object) {
+        if (object) {
             // Rotate the base
-            this._base.rotateY(-0.2);
+            object.rotateY(-0.2);
         }
     }
 
