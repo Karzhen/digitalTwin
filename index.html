@@ -7,11 +7,21 @@
 </head>
 <body>
     <canvas class="webgl"></canvas>
-    <nav>
-      <input id="range" type="range" min="0" max="6.28" step="0.01" value="0">
-      <input id="stop" type="button" value="STOP">
+    <div class="menu">
+      <label>Поворот руки</label>
+      <input id="hand" type="range" min="0" max="6.28" step="0.01" value="0">
+      <label>Поворот плеча</label>
+      <input id="shoulder" type="range" min="0" max="6.28" step="0.01" value="0">
+      <label>Поворот предплечья</label>
+      <input id="forearm" type="range" min="0" max="6.28" step="0.01" value="0">
+      <label>Поворот запястья</label>
+      <input id="wrist_1" type="range" min="0" max="6.28" step="0.01" value="0">
+      <label>Поворот руки</label>
+      <input id="rotator" type="range" min="-0.43" max="5.85" step="0.01" value="-0.43">
+      <label>Поворот пальца</label>
+      <input id="finger_1" type="range" min="0" max="6.28" step="0.01" value="0">
       <!-- here will be navigate or other controls -->
-    </nav>
+    </div>
     <script type="module" src ="/main.js"></script> <!-- main script -->
 </body>
 </html>

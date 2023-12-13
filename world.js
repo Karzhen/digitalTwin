@@ -127,10 +127,17 @@ class WORLD {
         this.figures.push({ config: type, physicsOBJ: physicsOBJ, graphicOBJ: graphicOBJ });
     }
 
-    BindFunction(domOBJECT,physicsOBJ, func, typeEvent = 'click') {
+    BindFunction(domOBJECT, physicsOBJ, func, typeEvent = 'click') {
         console.log('bind');
         domOBJECT.addEventListener(typeEvent, (event) => {
-            func(physicsOBJ);    
+            func(this, physicsOBJ);    
+        })
+    }
+
+    BindGLTF(domOBJECT, gltf, func, typeEvent = 'click') {
+        console.log('binded');
+        domOBJECT.addEventListener(typeEvent, (event) => {
+            func(gltf);    
         })
     }
 
@@ -253,66 +260,91 @@ class WORLD {
     */
     LoadGLTF(config) { 
         const loader = new GLTFLoader().setPath(config.dirpath);
+        let childPosition = 0;
+        
         loader.load(config.namefile, (gltf) => {
-            gltf.scene.traverse(child => {
-                child.castShadow = true;
-                console.log(child.name, child.position)
-                if (child.isMesh) {
-                    child.material.wireframe = config.wireframe;
+            if (gltf.scene) {
+                const meshesToRemove = config.meshesToRemove;
+    
+                gltf.scene.traverse(child => {
+                    child.castShadow = true;
+                    if (child.isMesh) {
+                        child.material.wireframe = config.wireframe;
+                    }
+                    // meshesToRemove.push(child);
+                    // console.log("DELETED:",child.name, child.position);
+                    console.log(child.name, child.position);
+                });
+    
+                if (meshesToRemove) {
+                    meshesToRemove.forEach(child => {
+                        gltf.scene.remove(child);
+                    });
                 }
-            });
-            gltf.scene.scale.set(config.scale[0], config.scale[1], config.scale[2]);
-            gltf.scene.position.set(config.pos[0], config.pos[1], config.pos[2]);
-            const boundingBox = new THREE.Box3().setFromObject(gltf.scene);
-            const size = new THREE.Vector3();
-            boundingBox.getSize(size);
-            this.scene.add(gltf.scene);
-            const configPHY = { 
-                type: config.type, 
-                size: [size.x, size.y, size.z], 
-                pos: config.pos, 
-                move: config.move,
-                density: config.density, // density of the object
-                friction: config.friction, // friction
-                restitution: config.restitution, // bounciness
-            };
-            const boxPHY = this.world.add(configPHY);
-            if (config.name) {
-                boxPHY.name = config.name;
-            }
-            if (config.createcopy) {
-                switch (config.type) {
-                    case 'box':
-                        this.CreateBox(configPHY, {
-                            color: '#fa0000',
-                            wireframe: true
-                        });
-                        break;
-                    case 'sphere':
-                        this.CreateSphere(configPHY, {
-                            color: '#fa0000',
-                            wireframe: true
-                        });
-                        break;
-                    case 'cylinder':
-                        console.log(configPHY.size);
-                        configPHY.size = [size.x, size.x, size.y];
-                        this.CreateCylinder(configPHY, {
-                            color: '#fa0000',
-                            wireframe: true
-                        });
-                        break;
+    
+                gltf.scene.scale.set(config.scale[0], config.scale[1], config.scale[2]);
+                gltf.scene.position.set(config.pos[0], config.pos[1], config.pos[2]);
+    
+                const boundingBox = new THREE.Box3().setFromObject(gltf.scene);
+                const size = new THREE.Vector3();
+                boundingBox.getSize(size);
+                
+                this.scene.add(gltf.scene);
+    
+                const configPHY = { 
+                    type: config.type, 
+                    size: [size.x, size.y, size.z], 
+                    pos: config.pos, 
+                    move: config.move,
+                    density: config.density, // density of the object
+                    friction: config.friction, // friction
+                    restitution: config.restitution, // bounciness
+                };
+    
+                const boxPHY = this.world.add(configPHY);
+    
+                if (config.name) {
+                    boxPHY.name = config.name;
                 }
+    
+                if (config.createcopy) {
+                    switch (config.type) {
+                        case 'box':
+                            this.CreateBox(configPHY, {
+                                color: '#fa0000',
+                                wireframe: true
+                            });
+                            break;
+                        case 'sphere':
+                            this.CreateSphere(configPHY, {
+                                color: '#fa0000',
+                                wireframe: true
+                            });
+                            break;
+                        case 'cylinder':
+                            console.log(configPHY.size);
+                            configPHY.size = [size.x, size.x, size.y];
+                            this.CreateCylinder(configPHY, {
+                                color: '#fa0000',
+                                wireframe: true
+                            });
+                            break;
+                    }
+                }
+    
+                config.type = 'gltf';
+                this.Bind(config, boxPHY, gltf);
+                this.lastLoadedGLTF = gltf;
+    
+                if (config.onload) {
+                    config.onload(gltf, boxPHY);
+                }
+            } else {
+                console.error("Error loading GLTF file");
             }
-            config.type = 'gltf';
-            this.Bind(config, boxPHY, gltf);
-            this.lastLoadedGLTF = gltf;
-            if (config.onload) {
-                config.onload(gltf, boxPHY);
-            }
-            return boxPHY;
         });
     }
+    
 
     SetBackgroundImage(path) {
         const textureLoader = new THREE.TextureLoader();
@@ -377,15 +409,46 @@ class WORLD {
 
     Restart() {
         this.figures.forEach(figure => {
-            console.log(figure);
             const position = figure.config.pos;
+            const rotate = [0, 0, 0];
             const size = figure.config.size;
             figure.physicsOBJ.position.set(2 * position[0], 2 * position[1], 2 * position[2]);
-            console.log(figure.physicsOBJ.position);
+            figure.physicsOBJ.quaternion.set(rotate[0], rotate[1], rotate[2], 1);
         });
         this.StopAll();
     }
 
+    // 
+    AddLight(type = DirectionalLight, colour = 0xffffff, intensity = 1, 
+        distance = 0, angle = Math.PI/2, penumbra = 0,
+        decay = 2, width = 10, height = 10, skyColour, groundColour, position = [0, 0, 0]) {
+        let light;
+        switch (type) {
+            case "DirectionalLight":
+                light = new THREE.DirectionalLight(colour, intensity);
+                break;
+            case "SpotLight":
+                light = new THREE.SpotLight(colour, intensity, distance, angle, penumbra, decay);
+                break;
+            case "PointLight":
+                light = new THREE.PointLight(colour, intensity, distance, decay);
+                break;
+            case "RectAreaLight":
+                light = new THREE.RectAreaLight(colour, intensity, width, height);
+                break;
+            case "HemisphereLight":
+                light = new THREE.HemisphereLight(skyColour, groundColour, intensity);
+                break;
+            case "AmbientLight":
+                light = new THREE.AmbientLight(colour, intensity);
+                break;
+        }
+        if (light) {
+            light.position.set(position[0], position[1], position[2]);
+            this.scene.add(light);
+            return light;
+        }
+    }
 }
 
 export { WORLD };
